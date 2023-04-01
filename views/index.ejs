@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-black h-screen w-screen flex justify-center text-white">
+    <div>
+      <div class="mt-16 w-96 bg-neutral-900 rounded-md p-4">
+        <div class="mb-8">
+          <h1 class="text-xl font-bold">Express Uptimer</h1>
+          <p class="font-semibold">
+            Ping interval: <%= pingInterval %> minutes
+          </p>
+        </div>
+
+        <div class="flex flex-col">
+          <p class="mb-2">Add/Remove a URL</p>
+          <input
+            id="url"
+            class="bg-neutral-800 border border-neutral-800 outline-none p-2 mb-1 rounded-md focus:border-neutral-700 transition-colors duration-100 h-10"
+            placeholder="URL"
+          />
+          <input
+            id="password"
+            type="password"
+            class="bg-neutral-800 border border-neutral-800 outline-none p-2 my-1 rounded-md focus:border-neutral-700 transition-colors duration-100 h-10"
+            placeholder="Master Password"
+          />
+          <div class="flex justify-between gap-2">
+            <button
+              onclick="addURL()"
+              class="bg-neutral-800 border border-neutral-800 outline-none p-2 my-1 rounded-md active:border-neutral-700 transition-colors duration-100 w-full h-10"
+            >
+              Add URL
+            </button>
+            <button
+              onclick="removeURL()"
+              class="bg-neutral-800 border border-neutral-800 outline-none p-2 my-1 rounded-md active:border-neutral-700 transition-colors duration-100 w-full h-10"
+            >
+              Remove URL
+            </button>
+          </div>
+          <p class="text-neutral-500" id="msg"></p>
+        </div>
+        <div class="flex flex-col mt-8">
+          <p class="mb-2">Pinging URLs:</p>
+          <% data.map(urlData => { %>
+          <div
+            class="bg-neutral-800 flex justify-between items-center rounded-md mb-2"
+          >
+            <div class="ml-4 h-10 flex items-center justify-between gap-2">
+              <p class=""><%= urlData.url %></p>
+            </div>
+            <div
+              class="w-2 h-2 rounded-full mr-4 <% if(urlData.online) { %>bg-green-600<%} else {%>bg-red-600<%} %>"
+            ></div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+    <script>
+      const urlEle = document.getElementById("url");
+      const pwEle = document.getElementById("password");
+
+      const msgEle = document.getElementById("msg");
+
+      async function removeURL() {
+        let json = await fetch("/db/delete", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            url: urlEle.value,
+            password: pwEle.value,
+          }),
+        }).then((data) => data.json());
+
+        if (json.response) {
+          msgEle.innerText = "Operation successful! Reloading...";
+          setTimeout(function () {
+            window.location.reload();
+          }, 200);
+        } else {
+          msgEle.innerText = "Operation error: " + json.msg;
+        }
+      }
+
+      async function addURL() {
+        let json = await fetch("/db/add", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            url: urlEle.value,
+            password: pwEle.value,
+          }),
+        }).then((data) => data.json());
+
+        if (json.response) {
+          msgEle.innerText = "Operation successful! Reloading...";
+          setTimeout(function () {
+            window.location.reload();
+          }, 200);
+        } else {
+          msgEle.innerText = "Operation error: " + json.msg;
+        }
+      }
+
+      async function getStatus(url) {
+        const { status } = fetch(url);
+        if (status !== 200) return "bg-green-600";
+        return "bg-red-600";
+      }
+    </script>
+  </body>
+</html>
